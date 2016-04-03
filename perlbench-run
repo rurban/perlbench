@@ -4,9 +4,33 @@ require 5.002;
 use strict;
 $| = 1;
 
-use Getopt::Std;
-use vars qw($opt_c $opt_t $opt_d $opt_s $opt_v);
-getopts("c:t:d:sv") or usage();
+use Getopt::Long;
+use vars qw($opt_c $opt_t $opt_d $opt_s $opt_v $opt_color);
+GetOptions(
+    'c=i'   => \$opt_c,
+    't=s'   => \$opt_t,
+    'd=s'   => \$opt_d,
+    's'     => \$opt_s,
+    'v'     => \$opt_v,
+    'color' => \$opt_color) or usage();
+#getopts("c:t:d:sv") or usage();
+
+sub usage
+{
+    $0 =~ s,.*/,,;
+    die "Usage: $0 [options] [lab1=]<perl1> [lab2=]<perl2>...
+
+  if an arg is a directory, 'perl' is appended to it
+Recognized options:
+  -s               don't scale numbers (so that first perl is always 100)
+  -t <filter>      only tests that match <filter> regex are timed
+  -c <cpu-factor>  use this factor to scale tests instead of running the
+                   'cpu_factor' program to determine it.
+  -d <dirname>     where to save results
+  -v               verbose - a bit of debug
+  --color          colorize the html output
+";
+}
 
 use Sys::Hostname qw(hostname);
 use File::Basename qw(basename dirname);
@@ -229,9 +253,10 @@ for $test (@tests) {
 	close(P);
 	close(RES);
 
-	my $overlib_attr = "";
+	my $aattr = "";
+	my $cattr = "";
 	if ($use_overlib) {
-	    $overlib_attr = qq( onmouseover="return overlib('$popup_text');" onmouseout="return nd();");
+	    $aattr = qq( onmouseover="return overlib('$popup_text');" onmouseout="return nd();");
 	}
 
 	# present results
@@ -246,8 +271,18 @@ for $test (@tests) {
 	    }
 	    $points *= $scale;
 	}
+        if ($opt_color) {
+            my $rounded = sprintf "%8.0f", $points;
+            if    ($rounded >= 140) { $cattr .= ' class="g40"' }
+            elsif ($rounded >= 120) { $cattr .= ' class="g20"' }
+            elsif ($rounded >= 110) { $cattr .= ' class="g10"' }
+            elsif ($rounded < 60)   { $cattr .= ' class="b40"' }
+            elsif ($rounded < 80)   { $cattr .= ' class="b20"' }
+            elsif ($rounded < 90)   { $cattr .= ' class="b10"' }
+        }
 	printf "%8.0f", $points;
-	printf INDEX qq(  <td align=right><a href="%s"%s>%.0f</a></td>\n), $res_file_link, $overlib_attr, $points;
+	printf INDEX qq(  <td align=right%s><a href="%s"%s>%.0f</a></td>\n), $cattr,
+                     $res_file_link, $aattr, $points;
 	$p->{point_sum} += $points;
 	$p->{no_tests}++;
     }
@@ -324,22 +359,6 @@ $index_url = "file://$index_url/index.html";
 
 print "\n\nResults saved in $index_url\n";
 
-
-sub usage
-{
-    $0 =~ s,.*/,,;
-    die "Usage: $0 [options] [lab1=]<perl1> [lab2=]<perl2>...
-
-  if an arg is a directory, 'perl' is appended to it
-Recognized options:
-  -s               don't scale numbers (so that first perl is always 100)
-  -t <filter>      only tests that match <filter> regex are timed
-  -c <cpu-factor>  use this factor to scale tests instead of running the
-                   'cpu_factor' program to determine it.
-  -d <dirname>     where to save results
-  -v               verbose - a bit of debug
-";
-}
 
 sub max
 {
