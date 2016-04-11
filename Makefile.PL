@@ -56,8 +56,7 @@ my %WriteMakefile = (
 			perlbench-runtests
 			perlbench-report
 			cpu_factor
-		  )
-		],
+		  )],
 
 	'CONFIGURE_REQUIRES' => {
 		'ExtUtils::MakeMaker'   => '6.64',
@@ -125,5 +124,27 @@ sub do_it {
 	}
 
 
-no warnings;
-__PACKAGE__;
+package MY;
+
+sub install {
+    my $result = shift->SUPER::install(@_);
+    $result =~ s/install :: pure_install doc_install/install :: pure_install doc_install data_install/;
+    $result .= '
+data_install :: all
+	$(NOECHO) $(CP) empty.t $(DESTINSTALLSITELIB)/$(FULLEXT)/
+	$(NOECHO) $(MKPATH) $(DESTINSTALLSITELIB)/$(FULLEXT)/benchmarks';
+    for (<benchmarks/*>) {
+        next if /^\./;
+        next unless -d $_;
+        $result .= "\n\t\$(NOECHO) \$(MKPATH) \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
+        for (<$_/*>) {
+          next if /^\./;
+          next unless -f $_;
+          $result .= "\n\t\$(NOECHO) \$(CP) $_ \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
+        }
+    }
+    $result .= "\n";
+    $result
+}
+
+1;

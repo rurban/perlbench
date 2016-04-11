@@ -36,6 +36,7 @@ use Sys::Hostname qw(hostname);
 use File::Basename qw(basename dirname);
 use File::Path qw(mkpath);
 use Cwd qw(abs_path);
+use Config;
 
 my @perls;
 for (@ARGV) {
@@ -63,7 +64,7 @@ unless ($dir) {
 }
 mkdir($dir, 0755) || die "Can't mkdir(\"$dir\"): $!";
 
-open(INDEX, ">$dir/index.html") || die "Can't create $dir/index.html: $!";
+open(INDEX, ">", "$dir/index.html") || die "Can't create $dir/index.html: $!";
 print INDEX "<html>\n";
 print INDEX "<head>\n";
 print INDEX " <title>PerlBench $HOSTNAME_HTML " . time2iso() . "</title>\n";
@@ -106,7 +107,7 @@ my %config_summary;
 	}
 	print "\n";
 
-	open(RES, ">$dir/CONFIG-$p->{label}.txt") || die;
+	open(RES, ">", "$dir/CONFIG-$p->{label}.txt") || die;
 	$p->run_cmd(*V, "-V") || die "Can't run $p->{path}: $?";
 	while (<V>) {
 	    print RES $_;
@@ -126,12 +127,13 @@ unless ($factor) {
 file("$dir/CPU_FACTOR", "$factor\n");
 
 # Try to run tests
-die "No test directory found" unless -d 't';
-
+#die "No test directory found" unless -d 't';
 my @tests;
 
 use File::Find;
-find(sub { /\.t$/ && push(@tests, $File::Find::name) }, "benchmarks");
+my $datadir = './benchmarks';
+$datadir = $Config{sitelib}."/PerlBench/benchmarks" unless -d $datadir;
+find( sub { /\.t$/ && push(@tests, $File::Find::name) }, $datadir);
 if ($opt_t) {
     @tests = grep /$opt_t/o, @tests;
 }
@@ -139,6 +141,11 @@ if ($opt_t) {
 
 # Try to run the empty test in order to time the loop
 my %empty_cycles;
+if (! -f 'empty.t') {
+  open F, '>', 'empty.t' or die $!;
+  print F "require 'benchlib.pl';\n&runtest(300, '');\n";
+  close F;
+}
 for my $p (@perls) {
     $p->{empty_cycles} = ($empty_cycles{$p->{path}} ||= do {
         my $empty_cycles;
@@ -189,12 +196,12 @@ for $test (@tests) {
     }
 
     my $name = $test;
-    $name =~ s,^benchmarks/,,;
+    $name =~ s,^.*benchmarks/,,;
     $name =~ s,\.t$,,;
 
     my $save_file = "$dir/$name/test.txt";
     mkpath(dirname($save_file), 0, 0755);
-    open(SAVE, ">$save_file") || die "Can't create $save_file: $!";
+    open(SAVE, ">", $save_file) || die "Can't create $save_file: $!";
     (my $save_file_link = $save_file) =~ s,^\Q$dir\E/,,;
     $save_file_link = htmlesc($save_file_link);
 
@@ -232,7 +239,7 @@ for $test (@tests) {
 
 	my $res_file = "$dir/$name/" . $p->{label} . ".txt";
 	mkpath(dirname($res_file), 0, 0755);
-	open(RES, ">$res_file") || die "Can't create $res_file: $!";
+	open(RES, ">", $res_file) || die "Can't create $res_file: $!";
 	(my $res_file_link = $res_file) =~ s,^\Q$dir\E/,,;
 	$res_file_link = htmlesc($res_file_link);
 
@@ -415,6 +422,7 @@ sub time2iso
 }
 
 BEGIN {
+
 package Perl;
 use constant OS => $^O;
 
