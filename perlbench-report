@@ -187,5 +187,6 @@ sub remove_common_words {
 
 sub usage {
     (my $progname = $0) =~ s,.*/,,;
-    die "Usage: $progname [options] <cmd> [cmd-options]\n";
+    die "Usage: $progname [options] <cmd> [cmd-options]\n".
+        "cmd: list_hosts, list_results hosts...\n";
 }
