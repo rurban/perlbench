@@ -300,12 +300,14 @@ for $test (@tests) {
 print "\n";
 printf "%-20s", "AVERAGE";
 for my $p (@perls) {
-    printf "%8.0f", $p->{point_sum} / $p->{no_tests};
+    printf "%8.0f", $p->{point_sum} / $p->{no_tests}
+        if $p->{no_tests};
 }
 print INDEX " <tr>\n";
 print INDEX "  <th align=left>Average</th>\n";
 for my $p (@perls) {
-    printf INDEX qq(  <td align=right>%.0f</td>\n), $p->{point_sum} / $p->{no_tests};
+    printf INDEX qq(  <td align=right>%.0f</td>\n), $p->{point_sum} / $p->{no_tests}
+        if $p->{no_tests};
 }
 print INDEX " </tr>\n";
 
