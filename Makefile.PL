@@ -132,15 +132,15 @@ sub install {
     $result .= '
 data_install :: all
 	$(NOECHO) $(CP) empty.t $(DESTINSTALLSITELIB)/$(FULLEXT)/
-	$(NOECHO) $(MKPATH) $(DESTINSTALLSITELIB)/$(FULLEXT)/benchmarks';
+	$(MKPATH) $(DESTINSTALLSITELIB)/$(FULLEXT)/benchmarks';
     for (<benchmarks/*>) {
         next if /^\./;
         next unless -d $_;
-        $result .= "\n\t\$(NOECHO) \$(MKPATH) \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
+        $result .= "\n\t\$(MKPATH) \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
         for (<$_/*>) {
           next if /^\./;
           next unless -f $_;
-          $result .= "\n\t\$(NOECHO) \$(CP) $_ \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
+          $result .= "\n\t\$(CP) $_ \$(DESTINSTALLSITELIB)/\$(FULLEXT)/$_";
         }
     }
     $result .= "\n";
