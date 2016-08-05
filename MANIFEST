@@ -25,6 +25,7 @@ benchmarks/hash/foreach-sort.t
 benchmarks/hash/foreach.t
 benchmarks/hash/get.t
 benchmarks/hash/set.t
+benchmarks/loop/for-ary.t
 benchmarks/loop/for-c.t
 benchmarks/loop/for-range-const.t
 benchmarks/loop/for-range.t
