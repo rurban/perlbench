@@ -7,12 +7,12 @@ $| = 1;
 use Getopt::Long;
 use vars qw($opt_c $opt_t $opt_d $opt_s $opt_v $opt_color);
 GetOptions(
-    'c=i'   => \$opt_c,
-    't=s'   => \$opt_t,
-    'd=s'   => \$opt_d,
-    's'     => \$opt_s,
-    'v'     => \$opt_v,
-    'color' => \$opt_color) or usage();
+    'c=i'    => \$opt_c,
+    't=s'    => \$opt_t,
+    'd=s'    => \$opt_d,
+    's'      => \$opt_s,
+    'v'      => \$opt_v,
+    'color!' => \$opt_color) or usage();
 #getopts("c:t:d:sv") or usage();
 
 sub usage
@@ -51,6 +51,7 @@ for (@ARGV) {
 
 usage() unless @perls;
 my $HOSTNAME_HTML = htmlesc(hostname());
+$opt_s++ if @perls == 1;
 
 # result directory
 my $dir = $opt_d;
@@ -138,7 +139,7 @@ my @tests;
 use File::Find;
 find( sub { /\.t$/ && push(@tests, $File::Find::name) }, $testdir);
 if ($opt_t) {
-    @tests = grep /$opt_t/o, @tests;
+    @tests = grep m|$opt_t|o, @tests;
 }
 @tests = sort @tests;
 
@@ -164,6 +165,7 @@ for my $p (@perls) {
         $empty_cycles;
     });
     $p->{point_sum} = 0;
+    $p->{points} = [];
 }
 
 # heading
@@ -294,6 +296,7 @@ for $test (@tests) {
 	printf INDEX qq(  <td align=right%s><a href="%s"%s>%.0f</a></td>\n), $cattr,
                      $res_file_link, $aattr, $points;
 	$p->{point_sum} += $points;
+	push @{$p->{points}}, $points;
 	$p->{no_tests}++;
     }
     print INDEX " </tr>\n";
@@ -301,16 +304,20 @@ for $test (@tests) {
 }
 
 print "\n";
-printf "%-20s", "AVERAGE";
+printf "%-22s", "AVERAGE";
 for my $p (@perls) {
-    printf "%8.0f", $p->{point_sum} / $p->{no_tests}
-        if $p->{no_tests};
+    if ($p->{no_tests}) {
+        my $geom_mean = 1.0;
+        $geom_mean *=  $_ for @{$p->{points}};
+        $p->{mean} = $geom_mean ** (1/$p->{no_tests});
+        printf "%8.01f", $p->{mean};
+    }
 }
 print INDEX " <tr>\n";
 print INDEX "  <th align=left>Average</th>\n";
 for my $p (@perls) {
-    printf INDEX qq(  <td align=right>%.0f</td>\n), $p->{point_sum} / $p->{no_tests}
-        if $p->{no_tests};
+    printf INDEX qq(  <td align=right>%.01f (%.0f)</td>\n), $p->{mean},
+      $p->{point_sum} / $p->{no_tests} if $p->{no_tests};
 }
 print INDEX " </tr>\n";
 
