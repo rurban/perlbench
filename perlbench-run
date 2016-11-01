@@ -64,14 +64,19 @@ unless ($dir) {
 }
 mkdir($dir, 0755) || die "Can't mkdir(\"$dir\"): $!";
 
+my $datadir = './';
+$datadir = $Config{sitelib}."/PerlBench/data" unless -e "$datadir/style.css";
+my $testdir = './benchmarks';
+$testdir = $Config{sitelib}."/PerlBench/benchmarks" unless -d $testdir;
+
 open(INDEX, ">", "$dir/index.html") || die "Can't create $dir/index.html: $!";
 print INDEX "<html>\n";
 print INDEX "<head>\n";
 print INDEX " <title>PerlBench $HOSTNAME_HTML " . time2iso() . "</title>\n";
 print INDEX qq( <link rel="stylesheet" href="style.css" type="text/css">\n);
-link_or_copy("style.css");
+link_or_copy("$datadir/style.css");
 my $use_overlib;
-if (link_or_copy("overlib.js")) {
+if (link_or_copy("$datadir/overlib.js")) {
     $use_overlib++;
     print INDEX qq( <script type="text/javascript" src="overlib.js"></script>\n);
 }
@@ -131,9 +136,7 @@ file("$dir/CPU_FACTOR", "$factor\n");
 my @tests;
 
 use File::Find;
-my $datadir = './benchmarks';
-$datadir = $Config{sitelib}."/PerlBench/benchmarks" unless -d $datadir;
-find( sub { /\.t$/ && push(@tests, $File::Find::name) }, $datadir);
+find( sub { /\.t$/ && push(@tests, $File::Find::name) }, $testdir);
 if ($opt_t) {
     @tests = grep /$opt_t/o, @tests;
 }
@@ -402,9 +405,10 @@ sub file {
 
 sub link_or_copy {
     my $f = shift;
-    link($f, "$dir/$f") || do {
+    my $b = basename($f);
+    link($f, "$dir/$b") || do {
 	require File::Copy;
-	File::Copy::copy($f, $f);
+	File::Copy::copy($f, "$dir/$b");
     }
 }
 sub htmlesc {
