@@ -131,7 +131,9 @@ sub install {
     $result =~ s/install :: pure_install doc_install/install :: pure_install doc_install data_install/;
     $result .= '
 data_install :: all
-	$(NOECHO) $(CP) empty.t $(DESTINSTALLSITELIB)/$(FULLEXT)/
+	$(CP) empty.t $(DESTINSTALLSITELIB)/$(FULLEXT)/
+	$(MKPATH) $(DESTINSTALLSITELIB)/$(FULLEXT)/data
+	$(CP) style.css overlib.js $(DESTINSTALLSITELIB)/$(FULLEXT)/data/
 	$(MKPATH) $(DESTINSTALLSITELIB)/$(FULLEXT)/benchmarks';
     for (<benchmarks/*>) {
         next if /^\./;
