@@ -316,7 +316,13 @@ for my $p (@perls) {
 print INDEX " <tr>\n";
 print INDEX "  <th align=left>Average</th>\n";
 for my $p (@perls) {
-    printf INDEX qq(  <td align=right>%.01f (%.0f)</td>\n), $p->{mean},
+    printf INDEX qq(  <td align=right>%.01f</td>\n),
+      $p->{mean} if $p->{no_tests};
+}
+print INDEX " </tr>\n";
+print INDEX "  <th align=left><small>Arithmetic mean</small></th>\n";
+for my $p (@perls) {
+    printf INDEX qq(  <td align=right><small>%.01f</small></td>\n),
       $p->{point_sum} / $p->{no_tests} if $p->{no_tests};
 }
 print INDEX " </tr>\n";
