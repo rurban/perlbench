@@ -80,7 +80,7 @@ BEGIN {
 EOT
     }
 
-    print $code if $main'debug;
+    print $code if $::debug;
     eval $code;
     if ($@) {
         die $@;
