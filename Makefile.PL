@@ -36,6 +36,7 @@ Perl.
 =cut
 
 use File::Spec::Functions qw(catfile);
+use ExtUtils::Command qw(mv);
 
 my $module    = __PACKAGE__;
 ( my $dist = $module ) =~ s/::/-/g;
@@ -50,7 +51,8 @@ my %WriteMakefile = (
 	'ABSTRACT_FROM' => $main_file,
 	'VERSION_FROM'  => $main_file,
 	'EXE_FILES'     => [
-		qw(
+          	  map {catfile('bin', $_)}
+          	  qw(
 			perlbench-timeit
 			perlbench-run
 			perlbench-runtests
@@ -121,7 +123,7 @@ sub do_it {
 	eval "require $minimum_perl;" or die $@;
 
 	WriteMakefile( %$arguments );
-	}
+}
 
 
 package MY;
